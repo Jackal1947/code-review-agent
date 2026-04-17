@@ -12,8 +12,8 @@ def test_preprocess_node():
 +    return 2
 """
     chunks = preprocess_diff(diff)
-    state = {"diff_chunks": [], "issues": [], "final_issues": [], "summary": None}
-    result = preprocess_node(state, diff)
+    state = {"diff_chunks": [], "issues": [], "final_issues": [], "summary": None, "diff": diff}
+    result = preprocess_node(state)
     assert len(result["diff_chunks"]) > 0
 
 

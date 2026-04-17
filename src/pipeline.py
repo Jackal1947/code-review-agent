@@ -5,8 +5,9 @@ from .preprocess import preprocess_diff
 from .aggregator import aggregate_issues, generate_summary
 
 
-def preprocess_node(state: ReviewState, diff: str) -> Dict[str, Any]:
+def preprocess_node(state: ReviewState) -> Dict[str, Any]:
     """Preprocess the diff into chunks."""
+    diff = state.get("diff", "")
     chunks = preprocess_diff(diff)
     return {"diff_chunks": chunks}
 

@@ -1,6 +1,11 @@
 """Data models for Code Review Agent."""
-from typing import TypedDict, List, Optional, Literal
+from typing import TypedDict, List, Optional, Literal, Annotated
 from pydantic import BaseModel, Field
+
+
+def reduce_issues(left: List, right: List) -> List:
+    """Reducer for combining issue lists from multiple agents."""
+    return left + right
 
 
 class Issue(BaseModel):
@@ -24,8 +29,9 @@ class DiffChunk(BaseModel):
 
 class ReviewState(TypedDict):
     """LangGraph state for review pipeline."""
+    diff: str
     diff_chunks: List[DiffChunk]
-    issues: List[Issue]
+    issues: Annotated[List[Issue], reduce_issues]
     final_issues: List[Issue]
     summary: Optional[str]
 
