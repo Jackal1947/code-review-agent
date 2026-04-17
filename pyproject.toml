@@ -1,0 +1,18 @@
+[project]
+name = "code-review-agent"
+version = "0.1.0"
+description = "LLM-based automated Code Review Agent"
+requires-python = ">=3.11"
+dependencies = [
+    "langgraph>=0.0.20",
+    "langchain-core>=0.1.0",
+    "langchain-anthropic>=0.1.0",
+    "pygithub>=2.1.0",
+    "pydantic>=2.0.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
