@@ -1,5 +1,7 @@
 """Integration tests for the code review pipeline."""
 import pytest
+from unittest.mock import AsyncMock, patch
+
 from src.pipeline import create_review_pipeline
 from src.models import Issue, ReviewState
 
@@ -128,3 +130,54 @@ diff --git a/tests/test_app.py b/tests/test_app.py
     assert "src/app.py" in file_names
     assert "src/utils.py" in file_names
     assert "tests/test_app.py" in file_names
+
+
+@pytest.mark.asyncio
+async def test_full_pipeline_with_mocked_agents():
+    """Test full pipeline with mocked LLM responses."""
+    sample_diff = """diff --git a/test.py b/test.py
+--- a/test.py
++++ b/test.py
+@@ -1,3 +1,4 @@
+ def hello():
+-    print("hello")
++    x = None
++    return x.foo()
+"""
+
+    with patch('src.agents.base.LLMReviewClient') as mock_class:
+        mock_instance = AsyncMock()
+        mock_instance.review.return_value = '{"issues": [{"type": "bug", "severity": "high", "confidence": 90, "file": "test.py", "line": 3, "description": "Accessing attribute on None", "suggestion": "Add null check"}]}'
+        mock_class.return_value = mock_instance
+
+        pipeline = create_review_pipeline()
+        initial_state = {"diff": sample_diff}
+        result = await pipeline.ainvoke(initial_state)
+
+        assert "final_issues" in result
+        assert len(result["final_issues"]) > 0
+
+
+@pytest.mark.asyncio
+async def test_pipeline_with_no_issues():
+    """Test pipeline when LLM finds no issues."""
+    sample_diff = """diff --git a/good.py b/good.py
+--- a/good.py
++++ b/good.py
+@@ -1,2 +1,3 @@
+ def hello():
+     return "hello"
++    print("modified")
+"""
+
+    with patch('src.agents.base.LLMReviewClient') as mock_class:
+        mock_instance = AsyncMock()
+        mock_instance.review.return_value = '{"issues": []}'
+        mock_class.return_value = mock_instance
+
+        pipeline = create_review_pipeline()
+        initial_state = {"diff": sample_diff}
+        result = await pipeline.ainvoke(initial_state)
+
+        assert "final_issues" in result
+        assert "summary" in result
