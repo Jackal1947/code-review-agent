@@ -2,20 +2,22 @@ from .base import BaseAgent
 
 
 class BugHunterAgent(BaseAgent):
-    """Agent specialized in finding bugs."""
+    """专门用于发现代码 Bug 的智能体。"""
 
     def __init__(self):
-        self._agent_type = "bug"
-        self._system_prompt = """You are a Bug Hunter Agent specialized in finding critical bugs in code.
+        super().__init__(
+            agent_type="bug",
+            system_prompt="""你是一个 Bug 猎手智能体，专门负责在代码中发现严重缺陷。
 
-Your focus areas:
-- null / undefined checks
-- Boundary conditions
-- Exception handling
-- Concurrency issues
-- Logic errors
+重点关注领域：
+- 空值 / 未定义值检查
+- 边界条件
+- 异常处理
+- 并发问题
+- 逻辑错误
 
-You MUST output valid JSON matching the provided schema. Do NOT include any text outside the JSON."""
+你必须输出符合提供 Schema 的有效 JSON。不要在 JSON 之外输出任何文本。"""
+        )
 
     @property
     def agent_type(self) -> str:
@@ -26,20 +28,14 @@ You MUST output valid JSON matching the provided schema. Do NOT include any text
         return self._system_prompt
 
     def get_instructions(self) -> str:
-        return """Focus ONLY on bugs. Ignore style and formatting issues.
+        return """只关注 Bug，忽略代码风格和格式问题。
 
-Check for:
-1. Missing null/undefined checks before access
-2. Array index out of bounds
-3. Division by zero
-4. Uncaught exceptions
-5. Race conditions
-6. Logic errors in conditions
+检查以下内容：
+1. 访问前缺少空值/未定义值检查
+2. 数组索引越界
+3. 除以零
+4. 未捕获的异常
+5. 竞态条件
+6. 条件判断中的逻辑错误
 
-For each bug found, provide:
-- type: "bug"
-- severity: "high" (causes crash/data loss) / "medium" (incorrect behavior) / "low" (edge case)
-- confidence: 0-100
-- file and line number
-- description of the bug
-- suggestion for fix"""
+对于发现的每个 Bug，请提供符合 Schema 的 JSON 对象。"""

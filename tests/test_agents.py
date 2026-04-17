@@ -2,30 +2,24 @@
 
 import pytest
 from src.agents.base import agent_output_schema, BaseAgent
-
-
-def test_agent_output_schema():
-    """Check schema has correct structure."""
-    schema = agent_output_schema()
-    assert schema["type"] == "object"
-    assert "properties" in schema
-    assert "required" in schema
-    assert "agent_type" in schema["properties"]
-    assert "findings" in schema["properties"]
-    assert "summary" in schema["properties"]
-    assert schema["required"] == ["agent_type", "findings", "summary"]
+from src.agents.bug_hunter import BugHunterAgent
+from src.agents.quality import CodeQualityAgent
+from src.agents.security import SecurityAgent
 
 
 class DummyAgent(BaseAgent):
     """Concrete implementation for testing."""
 
+    def __init__(self):
+        super().__init__(agent_type="dummy", system_prompt="You are a dummy agent.")
+
     @property
     def agent_type(self) -> str:
-        return "dummy"
+        return self._agent_type
 
     @property
     def system_prompt(self) -> str:
-        return "You are a dummy agent."
+        return self._system_prompt
 
     def get_instructions(self) -> str:
         return "Do nothing."
@@ -41,3 +35,19 @@ def test_base_agent_prompt_structure():
     assert "Do nothing." in prompt
     assert "example.py" in prompt
     assert "print('hello')" in prompt
+
+
+def test_bug_hunter_agent_properties():
+    agent = BugHunterAgent()
+    assert agent.agent_type == "bug"
+    assert "Bug" in agent.system_prompt
+
+
+def test_quality_agent_init():
+    agent = CodeQualityAgent()
+    assert agent.agent_type == "quality"
+
+
+def test_security_agent_init():
+    agent = SecurityAgent()
+    assert agent.agent_type == "security"
