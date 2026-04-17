@@ -1,9 +1,22 @@
 """LLM Client for Code Review Agents."""
 import os
+from pathlib import Path
 from typing import Any
+
+from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
+
+# 加载 .env 文件
+_load_env()
+
+
+def _load_env():
+    """加载 .env 环境变量文件"""
+    env_path = Path(__file__).parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
 
 
 class ReviewPrompt(BaseModel):
@@ -35,16 +48,16 @@ class LLMReviewClient:
 
     def __init__(
         self,
-        model: str = "deepseek-chat",
+        model: str | None = None,
         api_key: str | None = None,
-        base_url: str = "https://api.deepseek.com",
+        base_url: str | None = None,
     ):
-        self.model = model
+        self.model = model or os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
         self.api_key = api_key or os.environ.get("DEEPSEEK_API_KEY")
-        self.base_url = base_url
+        self.base_url = base_url or os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 
         if not self.api_key:
-            raise ValueError("Missing API key: set DEEPSEEK_API_KEY environment variable")
+            raise ValueError("Missing API key: set DEEPSEEK_API_KEY environment variable or .env file")
 
         self._client = ChatOpenAI(
             model=self.model,
