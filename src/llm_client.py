@@ -23,9 +23,9 @@ LLM_MODELS = {
     "claude-opus-4-6": (LLMProvider.ANTHROPIC, "claude-opus-4-6", "ANTHROPIC_API_KEY"),
     "claude-sonnet-4-6": (LLMProvider.ANTHROPIC, "claude-sonnet-4-6", "ANTHROPIC_API_KEY"),
     "claude-haiku-4-5": (LLMProvider.ANTHROPIC, "claude-haiku-4-5", "ANTHROPIC_API_KEY"),
-    # DeepSeek
-    "deepseek-chat": (LLMProvider.DEEPSEEK, "deepseek-chat", "DEEPSEEK_API_KEY"),
-    "deepseek-coder": (LLMProvider.DEEPSEEK, "deepseek-coder", "DEEPSEEK_API_KEY"),
+    # DeepSeek (OpenAI-compatible API)
+    "deepseek-chat": (LLMProvider.OPENAI, "deepseek-chat", "DEEPSEEK_API_KEY"),
+    "deepseek-coder": (LLMProvider.OPENAI, "deepseek-coder", "DEEPSEEK_API_KEY"),
     # OpenAI
     "gpt-4o": (LLMProvider.OPENAI, "gpt-4o", "OPENAI_API_KEY"),
     "gpt-4o-mini": (LLMProvider.OPENAI, "gpt-4o-mini", "OPENAI_API_KEY"),
@@ -87,7 +87,11 @@ class LLMReviewClient:
 
         # 获取 API key
         self.api_key = api_key or os.environ.get(f"{self.provider.upper()}_API_KEY")
-        self.base_url = base_url or os.environ.get(f"{self.provider.upper()}_BASE_URL")
+        self.base_url = base_url
+
+        # DeepSeek 使用 OpenAI 兼容接口，需要指定 base_url
+        if self.provider == LLMProvider.OPENAI and "deepseek" in self.model.lower():
+            self.base_url = base_url or os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
 
         if not self.api_key:
             raise ValueError(f"Missing API key: set {self._required_env} environment variable")
