@@ -2,6 +2,9 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
+import json
+
+from src.llm_client import LLMReviewClient, ReviewPrompt
 
 
 def agent_output_schema() -> dict[str, Any]:
@@ -60,5 +63,21 @@ class BaseAgent(ABC):
         return f"{self.system_prompt}\n\n指令：{instructions}\n\n上下文：{context}"
 
     async def review(self, context: dict[str, Any]) -> list[dict]:
-        """审查给定上下文并返回发现的问题。"""
-        return []
+        """使用 LLM 审查代码并返回发现的问题。"""
+        prompt = ReviewPrompt(
+            system_prompt=self.system_prompt,
+            instructions=self.get_instructions(),
+            context=context
+        )
+
+        client = LLMReviewClient()
+        response = await client.review(prompt, agent_output_schema())
+
+        try:
+            if isinstance(response, str):
+                data = json.loads(response)
+            else:
+                data = response
+            return data.get("issues", [])
+        except (json.JSONDecodeError, KeyError):
+            return []
