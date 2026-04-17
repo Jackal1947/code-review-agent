@@ -8,15 +8,16 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
-# 加载 .env 文件
-_load_env()
-
 
 def _load_env():
     """加载 .env 环境变量文件"""
     env_path = Path(__file__).parent.parent / ".env"
     if env_path.exists():
         load_dotenv(env_path)
+
+
+# 加载 .env 文件
+_load_env()
 
 
 class ReviewPrompt(BaseModel):
