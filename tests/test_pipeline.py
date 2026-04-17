@@ -1,6 +1,6 @@
 import pytest
-from src.pipeline import create_review_pipeline, preprocess_node, aggregator_node
-from src.models import DiffChunk, Issue
+from src.pipeline import bug_agent_node, quality_agent_node, security_agent_node, create_review_pipeline, preprocess_node, aggregator_node
+from src.models import ReviewState, DiffChunk, Issue
 
 
 def test_preprocess_node():
@@ -26,3 +26,15 @@ def test_aggregator_node():
     result = aggregator_node(state)
     assert len(result["final_issues"]) == 1
     assert result["summary"] is not None
+
+
+def test_bug_agent_node_returns_issues_list():
+    state = ReviewState(
+        diff="",
+        diff_chunks=[],
+        issues=[],
+        final_issues=[],
+        summary=None
+    )
+    result = bug_agent_node(state)
+    assert "issues" in result

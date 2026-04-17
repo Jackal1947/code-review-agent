@@ -3,32 +3,69 @@ from langgraph.graph import StateGraph, END
 from .models import ReviewState, DiffChunk, Issue
 from .preprocess import preprocess_diff
 from .aggregator import aggregate_issues, generate_summary
+from .agents.bug_hunter import BugHunterAgent
+from .agents.quality import CodeQualityAgent
+from .agents.security import SecurityAgent
+
+# Instantiate agents
+bug_agent = BugHunterAgent()
+quality_agent = CodeQualityAgent()
+security_agent = SecurityAgent()
 
 
 def preprocess_node(state: ReviewState) -> Dict[str, Any]:
-    """Preprocess the diff into chunks."""
+    """将差异内容预处理为代码块。"""
     diff = state.get("diff", "")
     chunks = preprocess_diff(diff)
     return {"diff_chunks": chunks}
 
 
+async def _run_agent(agent, chunks: List[DiffChunk]) -> List[Issue]:
+    """运行单个智能体审查所有代码块。"""
+    all_issues = []
+    for chunk in chunks:
+        context = {
+            "file": chunk.file,
+            "code": chunk.code,
+            "chunk_id": chunk.chunk_id,
+            "file_type": chunk.file_type
+        }
+        issues = await agent.review(context)
+        for issue_data in issues:
+            try:
+                issue = Issue(**issue_data)
+                all_issues.append(issue)
+            except Exception:
+                pass
+    return all_issues
+
+
 def bug_agent_node(state: ReviewState) -> Dict[str, Any]:
-    """Run Bug Hunter Agent on all chunks."""
-    return {"issues": []}
+    """对所有代码块运行 Bug 猎手智能体。"""
+    chunks = state.get("diff_chunks", [])
+    import asyncio
+    issues = asyncio.run(_run_agent(bug_agent, chunks))
+    return {"issues": issues}
 
 
 def quality_agent_node(state: ReviewState) -> Dict[str, Any]:
-    """Run Code Quality Agent on all chunks."""
-    return {"issues": []}
+    """对所有代码块运行代码质量智能体。"""
+    chunks = state.get("diff_chunks", [])
+    import asyncio
+    issues = asyncio.run(_run_agent(quality_agent, chunks))
+    return {"issues": issues}
 
 
 def security_agent_node(state: ReviewState) -> Dict[str, Any]:
-    """Run Security Agent on all chunks."""
-    return {"issues": []}
+    """对所有代码块运行安全检查智能体。"""
+    chunks = state.get("diff_chunks", [])
+    import asyncio
+    issues = asyncio.run(_run_agent(security_agent, chunks))
+    return {"issues": issues}
 
 
 def aggregator_node(state: ReviewState) -> Dict[str, Any]:
-    """Aggregate and deduplicate issues from all agents."""
+    """聚合并去重所有智能体发现的问题。"""
     all_issues = state.get("issues", [])
     final_issues = aggregate_issues(all_issues)
     summary = generate_summary(final_issues)
@@ -36,20 +73,20 @@ def aggregator_node(state: ReviewState) -> Dict[str, Any]:
 
 
 def create_review_pipeline() -> StateGraph:
-    """Create the LangGraph review pipeline.
+    """创建 LangGraph 审查流水线。
 
-    DAG flow: preprocess → [bug, quality, security] → aggregator → END
+    DAG 流向：预处理 → [bug检查, 质量检查, 安全检查] → 聚合器 → END
     """
     graph = StateGraph(ReviewState)
 
-    # Add nodes
+    # 添加节点
     graph.add_node("preprocess", preprocess_node)
     graph.add_node("bug_agent", bug_agent_node)
     graph.add_node("quality_agent", quality_agent_node)
     graph.add_node("security_agent", security_agent_node)
     graph.add_node("aggregator", aggregator_node)
 
-    # DAG edges
+    # DAG 边
     graph.add_edge("preprocess", "bug_agent")
     graph.add_edge("preprocess", "quality_agent")
     graph.add_edge("preprocess", "security_agent")
