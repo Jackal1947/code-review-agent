@@ -64,14 +64,21 @@ class BaseAgent(ABC):
 
     async def review(self, context: dict[str, Any]) -> list[dict]:
         """使用 LLM 审查代码并返回发现的问题。"""
+        import logging
+        logger = logging.getLogger(__name__)
+
         prompt = ReviewPrompt(
             system_prompt=self.system_prompt,
             instructions=self.get_instructions(),
             context=context
         )
 
-        client = LLMReviewClient()
-        response = await client.review(prompt, agent_output_schema())
+        try:
+            client = LLMReviewClient()
+            response = await client.review(prompt, agent_output_schema())
+        except Exception as e:
+            logger.error(f"LLM API call failed: {type(e).__name__}: {e}")
+            return []
 
         try:
             if isinstance(response, str):
@@ -102,7 +109,9 @@ class BaseAgent(ABC):
             elif isinstance(data, list):
                 return self._normalize_issues(data)
             return []
-        except (json.JSONDecodeError, KeyError, Exception):
+        except (json.JSONDecodeError, KeyError, Exception) as e:
+            logger.error(f"Failed to parse LLM response: {type(e).__name__}: {e}")
+            logger.error(f"Raw response: {response[:500] if isinstance(response, str) else response}")
             return []
 
     def _normalize_issues(self, issues: list) -> list:
