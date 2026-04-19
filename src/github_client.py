@@ -52,8 +52,12 @@ class GitHubClient:
         Returns:
             字符串格式的差异内容。
         """
-        pr = self.get_pull_request(owner, repo, pr_number)
-        return pr.diff()
+        import requests
+        headers = {"Authorization": f"token {self.token}"} if self.token else {}
+        url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
+        resp = requests.get(url, headers=headers)
+        resp.raise_for_status()
+        return resp.json().get("diff", "")
 
     def get_pr_files(self, owner: str, repo: str, pr_number: int) -> List[str]:
         """获取 Pull Request 中变更的文件列表。
