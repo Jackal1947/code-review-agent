@@ -35,6 +35,7 @@ jobs:
         run: |
           python -c "
           import os
+          import traceback
           from src.github_client import GitHubClient
           from src.pipeline import create_review_pipeline
 
@@ -42,15 +43,43 @@ jobs:
           repo = os.environ.get('REPO')
           pr_number = int(os.environ.get('PR_NUMBER'))
 
-          client = GitHubClient(os.environ.get('GITHUB_TOKEN'))
-          diff = client.get_pr_diff(owner, repo, pr_number)
+          # Debug: Check environment
+          print(f'OWNER: {owner}')
+          print(f'REPO: {repo}')
+          print(f'PR_NUMBER: {pr_number}')
+          print(f'GITHUB_TOKEN set: {bool(os.environ.get(\"GITHUB_TOKEN\"))}')
+          print(f'DEEPSEEK_API_KEY set: {bool(os.environ.get(\"DEEPSEEK_API_KEY\"))}')
 
-          pipeline = create_review_pipeline()
-          result = pipeline.invoke({'diff': diff})
+          print(f'Fetching PR diff: {owner}/{repo} PR #{pr_number}')
 
-          summary = result.get('summary', '')
-          if summary:
-              client.create_issue_comment(owner, repo, pr_number, summary)
+          try:
+              client = GitHubClient(os.environ.get('GITHUB_TOKEN'))
+              diff = client.get_pr_diff(owner, repo, pr_number)
+              print(f'Diff length: {len(diff)} bytes')
+              if not diff:
+                  print('WARNING: Diff is empty!')
+              else:
+                  print(f'Diff preview (first 200 chars): {diff[:200]}')
+
+              print('Running pipeline...')
+              pipeline = create_review_pipeline()
+              result = pipeline.invoke({'diff': diff})
+
+              summary = result.get('summary', '')
+              final_issues = result.get('final_issues', [])
+              print(f'Pipeline result: {len(final_issues)} issues found')
+
+              if summary:
+                  print('Posting summary comment...')
+                  client.create_issue_comment(owner, repo, pr_number, summary)
+                  print('Comment posted successfully')
+              else:
+                  print('No summary to post (no issues found or summary empty)')
+
+          except Exception as e:
+              print(f'ERROR: {type(e).__name__}: {e}')
+              traceback.print_exc()
+              raise
 
           print('审查完成')
           "

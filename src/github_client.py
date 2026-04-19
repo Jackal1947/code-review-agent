@@ -53,11 +53,15 @@ class GitHubClient:
             字符串格式的差异内容。
         """
         import requests
-        headers = {"Authorization": f"token {self.token}"} if self.token else {}
+        headers = {
+            "Authorization": f"token {self.token}" if self.token else "",
+            "Accept": "application/vnd.github.v3.diff"
+        }
         url = f"https://api.github.com/repos/{owner}/{repo}/pulls/{pr_number}"
         resp = requests.get(url, headers=headers)
         resp.raise_for_status()
-        return resp.json().get("diff", "")
+        # When using application/vnd.github.v3.diff, the diff is in the response body directly
+        return resp.text
 
     def get_pr_files(self, owner: str, repo: str, pr_number: int) -> List[str]:
         """获取 Pull Request 中变更的文件列表。
