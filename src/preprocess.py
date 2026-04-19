@@ -4,8 +4,8 @@ from .models import DiffChunk
 
 
 def split_diff_by_file(diff: str) -> Iterator[Dict]:
-    """Split diff into individual file diffs."""
-    # Parse unified diff format
+    """将差异内容按文件拆分为单个文件的差异。"""
+    # 解析统一差异格式
     pattern = r'diff --git a/(.*) b/(.*)'
     current_file = None
     current_content = []
@@ -25,7 +25,7 @@ def split_diff_by_file(diff: str) -> Iterator[Dict]:
 
 
 def classify_file_type(filename: str) -> Literal["backend", "frontend", "test", "config"]:
-    """Classify file type based on extension and name."""
+    """根据文件扩展名和名称对文件类型进行分类。"""
     if any(filename.endswith(ext) for ext in [".ts", ".py", ".go", ".java", ".rs"]):
         if "test" in filename or "spec" in filename:
             return "test"
@@ -40,7 +40,7 @@ def classify_file_type(filename: str) -> Literal["backend", "frontend", "test", 
 
 
 def split_file_by_hunks(file_diff: Dict, max_lines: int = 300) -> List[DiffChunk]:
-    """Split a file's diff into hunks, each no more than max_lines."""
+    """将文件差异按块拆分，每块不超过 max_lines 行。"""
     chunks = []
     chunk_id = 1
     current_hunk = []
@@ -84,7 +84,7 @@ def split_file_by_hunks(file_diff: Dict, max_lines: int = 300) -> List[DiffChunk
 
 
 def preprocess_diff(diff: str) -> List[DiffChunk]:
-    """Main entry point: split diff into chunks."""
+    """主入口：将差异内容拆分为代码块。"""
     all_chunks = []
     for file_diff in split_diff_by_file(diff):
         chunks = split_file_by_hunks(file_diff)

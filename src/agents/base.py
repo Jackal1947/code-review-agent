@@ -78,6 +78,10 @@ class BaseAgent(ABC):
                 data = json.loads(response)
             else:
                 data = response
-            return data.get("issues", [])
+            if isinstance(data, dict):
+                return data.get("issues", [])
+            elif isinstance(data, list):
+                return data
+            return []
         except (json.JSONDecodeError, KeyError):
             return []

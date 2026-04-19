@@ -1,1 +1,1 @@
-"""Code Review Agent - LLM-based automated code review."""
+"""代码审查智能体 - 基于大语言模型的自动化代码审查。"""

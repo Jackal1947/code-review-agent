@@ -3,7 +3,7 @@ from .models import Issue
 
 
 def deduplicate_issues(issues: List[Issue]) -> List[Issue]:
-    """Remove duplicate issues based on file, line, and type."""
+    """根据文件、行号和类型去除重复问题。"""
     unique_issues = []
     seen = set()
 
@@ -13,7 +13,7 @@ def deduplicate_issues(issues: List[Issue]) -> List[Issue]:
             seen.add(key)
             unique_issues.append(issue)
         else:
-            # Keep the one with higher confidence
+            # 保留置信度更高的问题
             for i, existing in enumerate(unique_issues):
                 if (existing.file, existing.line, existing.type) == key:
                     if issue.confidence > existing.confidence:
@@ -24,7 +24,7 @@ def deduplicate_issues(issues: List[Issue]) -> List[Issue]:
 
 
 def prioritize_issues(issues: List[Issue]) -> List[Issue]:
-    """Sort issues by priority: high > medium > low, then by confidence."""
+    """按优先级排序：高 > 中 > 低，同级别按置信度排序。"""
     severity_weight = {"high": 3, "medium": 2, "low": 1}
 
     return sorted(
@@ -35,12 +35,12 @@ def prioritize_issues(issues: List[Issue]) -> List[Issue]:
 
 
 def merge_related_issues(issues: List[Issue]) -> List[Issue]:
-    """Merge issues that are related (same file, close lines)."""
+    """合并相关问题（同一文件、相邻行）。"""
     return issues
 
 
 def aggregate_issues(all_issues: List[Issue]) -> List[Issue]:
-    """Main entry point: deduplicate, merge, and prioritize issues."""
+    """主入口：对问题进行去重、合并和优先级排序。"""
     if not all_issues:
         return []
 
@@ -52,7 +52,7 @@ def aggregate_issues(all_issues: List[Issue]) -> List[Issue]:
 
 
 def generate_summary(issues: List[Issue]) -> str:
-    """Generate summary text from issues."""
+    """根据问题列表生成摘要文本。"""
     high_count = sum(1 for i in issues if i.severity == "high")
     medium_count = sum(1 for i in issues if i.severity == "medium")
     low_count = sum(1 for i in issues if i.severity == "low")
@@ -62,22 +62,22 @@ def generate_summary(issues: List[Issue]) -> str:
     security_count = sum(1 for i in issues if i.type == "security")
 
     lines = [
-        f"## 🤖 AI Code Review Summary",
+        f"## 🤖 AI 代码审查摘要",
         "",
-        "### Overview",
-        f"- {high_count} high risk issue{'s' if high_count != 1 else ''}",
-        f"- {medium_count} medium issue{'s' if medium_count != 1 else ''}",
-        f"- {low_count} low risk issue{'s' if low_count != 1 else ''}",
+        "### 概览",
+        f"- {high_count} 个高风险问题",
+        f"- {medium_count} 个中风险问题",
+        f"- {low_count} 个低风险问题",
         "",
-        "### By Category",
-        f"- {bug_count} bug{'s' if bug_count != 1 else ''}",
-        f"- {quality_count} quality issue{'s' if quality_count != 1 else ''}",
-        f"- {security_count} security issue{'s' if security_count != 1 else ''}",
+        "### 按类别",
+        f"- {bug_count} 个 Bug",
+        f"- {quality_count} 个代码质量问题",
+        f"- {security_count} 个安全问题",
         "",
     ]
 
     if issues:
-        lines.append("### Key Findings")
+        lines.append("### 关键发现")
         for i, issue in enumerate(issues[:5], 1):
             lines.append(f"{i}. [{issue.severity.upper()}] {issue.file}:{issue.line} - {issue.description}")
 
