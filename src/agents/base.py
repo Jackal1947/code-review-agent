@@ -75,13 +75,80 @@ class BaseAgent(ABC):
 
         try:
             if isinstance(response, str):
-                data = json.loads(response)
+                # Strip markdown code fences
+                cleaned = response.strip()
+                if cleaned.startswith("```"):
+                    cleaned = cleaned.split("```")[1] if "```" in cleaned else cleaned
+                    # Remove language identifier if present (e.g., ```json)
+                    if cleaned.startswith("json"):
+                        cleaned = cleaned[4:]
+                    elif cleaned.startswith("python"):
+                        cleaned = cleaned[6:]
+                cleaned = cleaned.strip()
+                data = json.loads(cleaned)
             else:
                 data = response
+
             if isinstance(data, dict):
-                return data.get("issues", [])
+                # Try different keys for issues
+                issues = data.get("issues", [])
+                if not issues:
+                    # Try other common keys
+                    for key in ["security_issues", "quality_issues", "bug_issues", "problems", "findings"]:
+                        issues = data.get(key, [])
+                        if issues:
+                            break
+                return self._normalize_issues(issues) if isinstance(issues, list) else []
             elif isinstance(data, list):
-                return data
+                return self._normalize_issues(data)
             return []
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError, Exception):
             return []
+
+    def _normalize_issues(self, issues: list) -> list:
+        """Normalize issue field names to match the expected schema."""
+        normalized = []
+        severity_map = {
+            "高": "high", "中": "medium", "低": "low",
+            "高危": "high", "中危": "medium", "低危": "low",
+            "high": "high", "medium": "medium", "low": "low",
+            "High": "high", "Medium": "medium", "Low": "low",
+        }
+        type_map = {
+            "SQL注入": "security", "SQL 注入": "security",
+            "XSS": "security",
+            "未验证输入": "security", "未经验证的用户输入": "security",
+            "信息泄露": "security",
+            "bug": "bug", "Bug": "bug",
+            "quality": "quality", "Quality": "quality",
+            "security": "security", "Security": "security",
+        }
+
+        for issue in issues:
+            if isinstance(issue, dict):
+                # Normalize severity
+                severity = issue.get("severity", "medium")
+                if isinstance(severity, str):
+                    severity = severity_map.get(severity, "medium")
+
+                # Normalize type
+                issue_type = issue.get("type", self._agent_type)
+                if isinstance(issue_type, str):
+                    issue_type = type_map.get(issue_type, issue_type.lower())
+                    # Fallback: if not in type_map, use the agent type if it's not a generic word
+                    if issue_type not in ["bug", "quality", "security"]:
+                        issue_type = self._agent_type
+
+                # Map location to file if needed
+                file = issue.get("file", issue.get("location", "unknown"))
+
+                normalized.append({
+                    "type": issue_type,
+                    "severity": severity,
+                    "confidence": issue.get("confidence", 80),
+                    "file": file,
+                    "line": issue.get("line", 1),
+                    "description": issue.get("description", ""),
+                    "suggestion": issue.get("suggestion", issue.get("fix", ""))
+                })
+        return normalized

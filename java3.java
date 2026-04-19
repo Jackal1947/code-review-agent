@@ -27,7 +27,7 @@ public class LoginServlet extends HttpServlet {
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
 
-            // ★★★★★ 存在严重 SQL 注入漏洞的写法 ★★★★★
+            
             String sql = "SELECT * FROM users WHERE username = '" + username 
                        + "' AND password = '" + password + "'";
 
