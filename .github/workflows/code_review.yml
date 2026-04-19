@@ -38,8 +38,8 @@ jobs:
           repo = os.environ.get('REPO')
           pr_number = int(os.environ.get('PR_NUMBER'))
 
-          client = GitHubClient(owner, repo, os.environ.get('GITHUB_TOKEN'))
-          diff = client.get_pr_diff(pr_number)
+          client = GitHubClient(os.environ.get('GITHUB_TOKEN'))
+          diff = client.get_pr_diff(owner, repo, pr_number)
 
           pipeline = create_review_pipeline()
           result = pipeline.invoke({'diff': diff})
