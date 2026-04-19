@@ -26,8 +26,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          REPO: ${{ github.repository }}
-          OWNER: ${{ github.repository_owner }}
+          # Use base repo info (correct for both forked and non-forked PRs)
+          OWNER: ${{ github.event.pull_request.base.repo.owner.login }}
+          REPO: ${{ github.event.pull_request.base.repo.name }}
         run: |
           python -c "
           import os
@@ -46,7 +47,7 @@ jobs:
 
           summary = result.get('summary', '')
           if summary:
-              client.post_summary_comment(pr_number, summary)
+              client.create_issue_comment(owner, repo, pr_number, summary)
 
           print('审查完成')
           "
