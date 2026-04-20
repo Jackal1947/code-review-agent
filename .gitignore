@@ -45,6 +45,7 @@ Thumbs.db
 # Local scripts
 run_local.py
 "code review.markdown"
+TODO.md
 
 # Documentation (local development docs only)
 docs/
