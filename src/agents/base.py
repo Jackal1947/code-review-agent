@@ -39,18 +39,25 @@ class BaseAgent(ABC):
     def __init__(self, agent_type: str, system_prompt: str):
         self._agent_type = agent_type
         self._system_prompt = system_prompt
+        self._skill_prompt: str = ""
 
     @property
-    @abstractmethod
     def agent_type(self) -> str:
         """返回该智能体的类型标识符。"""
-        pass
+        return self._agent_type
 
     @property
-    @abstractmethod
     def system_prompt(self) -> str:
-        """返回该智能体的系统提示词。"""
-        pass
+        """返回该智能体的系统提示词（含注入的 SKILL 内容）。"""
+        if self._skill_prompt:
+            return (
+                f"{self._system_prompt}\n"
+                f"---\n"
+                f"团队补充规范：\n"
+                f"{self._skill_prompt}\n"
+                f"---"
+            )
+        return self._system_prompt
 
     @abstractmethod
     def get_instructions(self) -> str:
@@ -61,6 +68,10 @@ class BaseAgent(ABC):
         """根据给定上下文构建提示词。"""
         instructions = self.get_instructions()
         return f"{self.system_prompt}\n\n指令：{instructions}\n\n上下文：{context}"
+
+    def inject_skill_prompt(self, skill_body: str) -> None:
+        """注入团队 SKILL 内容到 system prompt"""
+        self._skill_prompt = skill_body
 
     async def review(self, context: dict[str, Any]) -> list[dict]:
         """使用 LLM 审查代码并返回发现的问题。"""
