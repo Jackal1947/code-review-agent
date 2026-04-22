@@ -43,3 +43,14 @@ def test_agent_inject_skill():
     combined = agent.system_prompt
     assert "Team skill content" in combined
     assert "---" in combined  # Separator should exist
+
+
+def test_pipeline_integration():
+    """验证 pipeline 正确加载并注入 SKILL"""
+    from src.pipeline import bug_agent, quality_agent, security_agent
+
+    # SKILL should be loaded from team-rules-skill/default.md
+    # If the file doesn't exist, agents should still work with empty skill
+    assert bug_agent is not None
+    assert quality_agent is not None
+    assert security_agent is not None

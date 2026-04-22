@@ -6,11 +6,22 @@ from .aggregator import aggregate_issues, generate_summary
 from .agents.bug_hunter import BugHunterAgent
 from .agents.quality import CodeQualityAgent
 from .agents.security import SecurityAgent
+from .skill_loader import TeamSkillLoader
 
 # Instantiate agents
 bug_agent = BugHunterAgent()
 quality_agent = CodeQualityAgent()
 security_agent = SecurityAgent()
+
+# Load team SKILL if exists
+skill_loader = TeamSkillLoader()
+if skill_loader.load():
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Loaded team skill: {skill_loader.name}")
+    bug_agent.inject_skill_prompt(skill_loader.body)
+    quality_agent.inject_skill_prompt(skill_loader.body)
+    security_agent.inject_skill_prompt(skill_loader.body)
 
 
 def preprocess_node(state: ReviewState) -> Dict[str, Any]:
