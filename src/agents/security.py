@@ -26,7 +26,7 @@ class SecurityAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        return self._system_prompt
+        return super().system_prompt
 
     def get_instructions(self) -> str:
         return """只关注安全问题，忽略 Bug 和代码质量。

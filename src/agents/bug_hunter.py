@@ -25,7 +25,7 @@ class BugHunterAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        return self._system_prompt
+        return super().system_prompt
 
     def get_instructions(self) -> str:
         return """只关注 Bug，忽略代码风格和格式问题。

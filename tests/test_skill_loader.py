@@ -29,3 +29,17 @@ def test_load_nonexistent_skill():
 def test_skill_not_loaded_initially():
     loader = TeamSkillLoader()
     assert loader.is_loaded is False
+
+def test_agent_inject_skill():
+    from src.agents.bug_hunter import BugHunterAgent
+
+    agent = BugHunterAgent()
+    original_prompt = agent.system_prompt
+
+    skill_content = "Team skill content"
+    agent.inject_skill_prompt(skill_content)
+
+    # Verify skill was injected
+    combined = agent.system_prompt
+    assert "Team skill content" in combined
+    assert "---" in combined  # Separator should exist

@@ -25,7 +25,7 @@ class CodeQualityAgent(BaseAgent):
 
     @property
     def system_prompt(self) -> str:
-        return self._system_prompt
+        return super().system_prompt
 
     def get_instructions(self) -> str:
         return """只关注代码质量问题，忽略 Bug（由 BugHunter 负责）和代码风格。
