@@ -67,19 +67,7 @@ class BaseAgent(ABC):
     def build_prompt(self, context: dict[str, Any]) -> str:
         """根据给定上下文构建提示词。"""
         instructions = self.get_instructions()
-
-        # 构建最终的 system prompt
-        final_system_prompt = self._system_prompt
-        if self._skill_prompt:
-            final_system_prompt = (
-                f"{self._system_prompt}\n"
-                f"---\n"
-                f"团队补充规范：\n"
-                f"{self._skill_prompt}\n"
-                f"---"
-            )
-
-        return f"{final_system_prompt}\n\n指令：{instructions}\n\n上下文：{context}"
+        return f"{self.system_prompt}\n\n指令：{instructions}\n\n上下文：{context}"
 
     def inject_skill_prompt(self, skill_body: str) -> None:
         """注入团队 SKILL 内容到 system prompt"""

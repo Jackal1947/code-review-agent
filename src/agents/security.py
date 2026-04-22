@@ -20,14 +20,6 @@ class SecurityAgent(BaseAgent):
 你必须输出符合提供 Schema 的有效 JSON。不要在 JSON 之外输出任何文本。"""
         )
 
-    @property
-    def agent_type(self) -> str:
-        return self._agent_type
-
-    @property
-    def system_prompt(self) -> str:
-        return super().system_prompt
-
     def get_instructions(self) -> str:
         return """只关注安全问题，忽略 Bug 和代码质量。
 
