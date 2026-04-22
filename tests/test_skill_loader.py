@@ -3,7 +3,7 @@ import pytest
 from src.skill_loader import TeamSkillLoader
 
 def test_load_valid_skill(tmp_path):
-    skill_file = tmp_path / "default.md"
+    skill_file = tmp_path / "SKILL.md"
     skill_file.write_text("""---
 name: test-skill
 description: Test description
@@ -49,7 +49,7 @@ def test_pipeline_integration():
     """验证 pipeline 正确加载并注入 SKILL"""
     from src.pipeline import bug_agent, quality_agent, security_agent
 
-    # SKILL should be loaded from team-rules-skill/default.md
+    # SKILL should be loaded from team-rules-skill/SKILL.md
     # If the file doesn't exist, agents should still work with empty skill
     assert bug_agent is not None
     assert quality_agent is not None

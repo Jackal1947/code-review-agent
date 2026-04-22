@@ -7,7 +7,7 @@ from typing import Optional
 class TeamSkillLoader:
     """加载并解析团队规范 SKILL 文件"""
 
-    def __init__(self, skill_path: str = "team-rules-skill/default.md"):
+    def __init__(self, skill_path: str = "team-rules-skill/SKILL.md"):
         self.skill_path = skill_path
         self._name: str = ""
         self._description: str = ""
