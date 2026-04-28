@@ -1,4 +1,3 @@
-"""LLM Client for Code Review Agents."""
 import os
 from pathlib import Path
 from typing import Any
@@ -21,13 +20,30 @@ _load_env()
 
 
 class ReviewPrompt(BaseModel):
-    """Structured prompt for code review."""
     system_prompt: str
     instructions: str
     context: dict[str, Any]
 
     def context_repr(self) -> str:
-        return f"File: {self.context.get('file', 'unknown')}\n\nCode:\n{self.context.get('code', '')}"
+        parts = [f"File: {self.context.get('file', 'unknown')}"]
+
+        # 项目目录结构
+        directory_tree = self.context.get("directory_tree", "")
+        if directory_tree:
+            parts.append(f"\n## 项目目录结构\n```\n{directory_tree}\n```")
+
+        # 变更文件的依赖关系
+        changed_files_arch = self.context.get("changed_files_arch", {})
+        if changed_files_arch:
+            dep_lines = []
+            for f, info in changed_files_arch.items():
+                imports_str = ", ".join(info.get("imports", [])) or "(无)"
+                symbols_str = ", ".join(info.get("symbols", [])) or "(无)"
+                dep_lines.append(f"  {f}:\n    依赖: {imports_str}\n    定义: {symbols_str}")
+            parts.append(f"\n## 变更文件依赖关系\n" + "\n".join(dep_lines))
+
+        parts.append(f"\n## 变更代码\n{self.context.get('code', '')}")
+        return "\n".join(parts)
 
     def build_messages(self) -> list:
         return [

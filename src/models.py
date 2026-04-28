@@ -1,5 +1,5 @@
 """代码审查智能体的数据模型。"""
-from typing import TypedDict, List, Optional, Literal, Annotated
+from typing import TypedDict, List, Optional, Literal, Annotated, Dict
 from pydantic import BaseModel, Field
 
 
@@ -27,13 +27,27 @@ class DiffChunk(BaseModel):
     file_type: Literal["backend", "frontend", "test", "config"]
 
 
+class FileArchInfo(BaseModel):
+    """单个文件的架构信息。"""
+    imports: List[str] = []
+    symbols: List[str] = []
+
+
+class ArchitectureContext(BaseModel):
+    """项目架构上下文，注入到审查 Agent 中。"""
+    directory_tree: str = ""
+    changed_files: Dict[str, FileArchInfo] = {}
+
+
 class ReviewState(TypedDict):
     """审查流水线的 LangGraph 状态。"""
     diff: str
+    project_root: str
     diff_chunks: List[DiffChunk]
     issues: Annotated[List[Issue], reduce_issues]
     final_issues: List[Issue]
     summary: Optional[str]
+    arch_context: Optional[ArchitectureContext]
 
 
 class ReviewResult(BaseModel):
